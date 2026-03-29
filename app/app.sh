@@ -1,26 +1,28 @@
 #!/bin/bash
-# Start ssh server
-service ssh restart 
+set -euo pipefail
 
-# Starting the services
+service ssh restart
 bash start-services.sh
 
-# Creating a virtual environment
-python3 -m venv .venv
+if [ ! -d .venv ]; then
+  python3 -m venv .venv
+fi
+
 source .venv/bin/activate
 
-# Install any packages
-pip install -r requirements.txt  
+pip install -r requirements.txt
 
-# Package the virtual env.
+rm -f .venv.tar.gz
 venv-pack -o .venv.tar.gz
 
-# Collect data
-bash prepare_data.sh
-
-
-# Run the indexer
+bash prepare_data.sh 1000
 bash index.sh
 
-# Run the ranker
-bash search.sh "this is a query!"
+bash search.sh "computer science"
+bash search.sh "artificial intelligence"
+
+echo "Running add_to_index smoke test"
+
+bash add_to_index.sh /app/99999999_GalievTestToken.txt
+
+bash search.sh "galievtesttoken"
