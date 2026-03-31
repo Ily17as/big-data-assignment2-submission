@@ -35,6 +35,7 @@ import re
 import sys
 import unicodedata
 
+# Keep HDFS-safe ASCII file names.
 name = sys.argv[1]
 root, ext = os.path.splitext(name)
 root = unicodedata.normalize("NFKD", root).encode("ascii", "ignore").decode("ascii")
@@ -105,6 +106,7 @@ if os.path.exists(existing_path):
             parts = line.split("\t", 2)
             if len(parts) != 3:
                 continue
+            # Replace by doc_id to avoid duplicates.
             if parts[0] == doc_id:
                 lines.append(f"{doc_id}\t{title}\t{text}")
                 replaced = True
@@ -127,6 +129,7 @@ hdfs dfs -put -f "$MERGED" /input/data/part-00000
 hdfs dfs -ls /input/data || true
 
 echo "[STEP 4/5] Rebuilding the index and reloading Cassandra"
+# Full rebuild is simpler than partial merge here.
 bash index.sh
 
 echo "[STEP 5/5] Smoke-test search"

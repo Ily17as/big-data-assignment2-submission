@@ -13,6 +13,7 @@ KEYSPACE = "search_engine"
 
 
 def tokenize(text: str):
+    # simple normalization
     return TOKEN_RE.findall(text.lower())
 
 def fetch_one_value(session, query, args):
@@ -40,6 +41,7 @@ def main() -> None:
     cluster = Cluster(["cassandra-server"])
     session = cluster.connect(KEYSPACE)
 
+    # load corpus stats
     n_row = fetch_one_value(session, "SELECT stat_value FROM corpus_stats WHERE stat_key=%s", ("N",))
     avgdl_row = fetch_one_value(session, "SELECT stat_value FROM corpus_stats WHERE stat_key=%s", ("AVGDL",))
 
@@ -66,6 +68,7 @@ def main() -> None:
             doc_id = row.doc_id
 
             if doc_id not in doc_meta:
+                # fetch doc info once
                 doc_row = fetch_one_value(
                     session,
                     "SELECT title, doc_len FROM documents WHERE doc_id=%s",
@@ -74,8 +77,9 @@ def main() -> None:
 
                 if doc_row is None:
                     continue
-                
+
                 doc_meta[doc_id] = {"title": doc_row.title, "doc_len": int(doc_row.doc_len)}
+
             postings_payload.append((term, doc_id, int(row.tf), idf, doc_meta[doc_id]["doc_len"]))
 
     if not postings_payload:
@@ -89,6 +93,7 @@ def main() -> None:
 
     def contribution(rec):
         _, doc_id, tf, idf, doc_len = rec
+        # bm25 term score
         denom = tf + K1 * (1.0 - B + B * (doc_len / bc_avgdl.value))
         score = idf * ((tf * (K1 + 1.0)) / denom)
         return doc_id, score
@@ -100,13 +105,13 @@ def main() -> None:
     )
 
     print(f"Query: {query_text}")
-
     print("Top 10 documents:")
 
     for rank, (doc_id, score) in enumerate(scores, start=1):
         title = doc_meta.get(doc_id, {}).get("title", "")
         print(f"{rank}. {doc_id}\t{title}\t{score:.6f}")
 
+    # graceful shutdown
     session.shutdown()
     cluster.shutdown()
     spark.stop()

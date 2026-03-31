@@ -12,6 +12,7 @@ KEYSPACE = "search_engine"
 def decode_title(value: str) -> str:
     return base64.b64decode(value.encode("ascii")).decode("utf-8")
 
+
 def connect_with_retry(hosts, attempts=20, delay=3):
     last_exc = None
     for _ in range(attempts):
@@ -82,6 +83,7 @@ def main() -> None:
     insert_posting = session.prepare("INSERT INTO postings (term, doc_id, tf) VALUES (?, ?, ?)")
     insert_stat = session.prepare("INSERT INTO corpus_stats (stat_key, stat_value) VALUES (?, ?)")
 
+    # Load document metadata exported from HDFS.
     for line in (BASE_DIR / "documents.tsv").read_text(encoding="utf-8").splitlines():
         if not line.strip():
             continue

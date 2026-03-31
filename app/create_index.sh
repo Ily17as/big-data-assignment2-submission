@@ -11,6 +11,7 @@ hdfs dfs -rm -r -f /tmp/indexer || true
 hdfs dfs -rm -r -f "$INDEX_ROOT" || true
 hdfs dfs -mkdir -p /tmp/indexer
 
+# Run Hadoop Streaming indexer with one reducer for a single final shard.
 hadoop jar "$HADOOP_HOME/share/hadoop/tools/lib/hadoop-streaming"*.jar \
   -D mapreduce.job.name="assignment2-indexer" \
   -D mapreduce.job.reduces=1 \
@@ -28,6 +29,7 @@ awk -F '\t' '$1=="POSTING"{print $2"\t"$3"\t"$4}' "$LOCAL_TMP/raw.tsv" > "$LOCAL
 awk -F '\t' '$1=="STAT"{print $2"\t"$3}' "$LOCAL_TMP/raw.tsv" > "$LOCAL_TMP/stats.tsv"
 
 for part in documents vocabulary postings stats; do
+  # Keep each logical index component in its own HDFS directory.
   hdfs dfs -mkdir -p "$INDEX_ROOT/$part"
   hdfs dfs -put -f "$LOCAL_TMP/$part.tsv" "$INDEX_ROOT/$part/part-00000"
 done

@@ -14,6 +14,7 @@ if [ -z "$QUERY_TEXT" ]; then
   exit 1
 fi
 
+# Ship the packed virtualenv so executors use the same Python setup.
 spark-submit \
   --master yarn \
   --deploy-mode client \

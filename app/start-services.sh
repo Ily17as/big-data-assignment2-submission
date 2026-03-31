@@ -5,6 +5,7 @@ $HADOOP_HOME/sbin/start-dfs.sh
 $HADOOP_HOME/sbin/start-yarn.sh
 mapred --daemon start historyserver
 
+# Quick cluster sanity check after startup.
 jps -lm
 hdfs dfsadmin -report || true
 hdfs dfsadmin -safemode leave || true

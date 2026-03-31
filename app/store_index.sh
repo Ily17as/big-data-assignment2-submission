@@ -7,6 +7,7 @@ EXPORT_DIR=/tmp/index_export
 rm -rf "$EXPORT_DIR"
 mkdir -p "$EXPORT_DIR"
 
+# Export HDFS index parts locally before loading them into Cassandra.
 hdfs dfs -cat /indexer/documents/part-* > "$EXPORT_DIR/documents.tsv"
 hdfs dfs -cat /indexer/vocabulary/part-* > "$EXPORT_DIR/vocabulary.tsv"
 hdfs dfs -cat /indexer/postings/part-* > "$EXPORT_DIR/postings.tsv"
